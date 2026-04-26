@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+# SConstruct — сборка GDExtension (C++ плагин для Godot)
+#
+# Использование:
+#   scons                                     # debug по умолчанию
+#   scons target=template_release             # release
+#   scons -j8                                 # параллельная сборка
+
+import os
+
+# Подтягиваем настройки из godot-cpp
+env = SConscript("godot-cpp/SConstruct")
+
+# Наши исходники
+env.Append(CPPPATH=["extension_src/"])
+
+sources = Glob("extension_src/*.cpp")
+
+# Имя .so файла
+lib = env.SharedLibrary(
+    target="bin/libqt_bridge",
+    source=sources,
+)
+
+Default(lib)
