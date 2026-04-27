@@ -69,7 +69,9 @@ void MainWindow::showSpawnMenu(const QJsonObject& data) {
                     float(data["spawn_y"].toDouble()),
                     float(data["spawn_z"].toDouble())};
     m_previewRot = {0, 0, 0};
-    m_pendingCubeName = QString("Куб_%1").arg(data["next_id"].toInt());
+    // Инициализируем имя только при первом вызове (не при переоткрытии после Переименовать)
+    if (m_pendingCubeName.isEmpty())
+        m_pendingCubeName = QString("Куб_%1").arg(data["next_id"].toInt());
 
     QMenu menu;
     auto* title = menu.addAction("Новый куб");
@@ -131,9 +133,11 @@ void MainWindow::showSpawnMenu(const QJsonObject& data) {
 
     } else if (btn == "Создать") {
         QJsonObject p; p["name"] = m_pendingCubeName;
+        m_pendingCubeName.clear();
         sendPickerCommand("confirm_spawn", p);
 
     } else if (btn == "Отмена") {
+        m_pendingCubeName.clear();
         sendPickerCommand("cancel_spawn", {});
     }
 }

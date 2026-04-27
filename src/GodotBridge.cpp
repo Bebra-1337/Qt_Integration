@@ -155,11 +155,11 @@ bool GodotBridge::callNodeMethod(const QString&      nodePath,
 
     QJsonArray jsonArgs;
     for (const auto& a : args) {
-        switch (a.typeId()) {
-        case QMetaType::Int:    jsonArgs.append(a.toInt());    break;
-        case QMetaType::Double: jsonArgs.append(a.toDouble()); break;
-        case QMetaType::Bool:   jsonArgs.append(a.toBool());   break;
-        default:                jsonArgs.append(a.toString()); break;
+        switch (a.type()) {
+        case QVariant::Int:    jsonArgs.append(a.toInt());    break;
+        case QVariant::Double: jsonArgs.append(a.toDouble()); break;
+        case QVariant::Bool:   jsonArgs.append(a.toBool());   break;
+        default:               jsonArgs.append(a.toString()); break;
         }
     }
     obj["args"] = jsonArgs;
@@ -175,11 +175,11 @@ bool GodotBridge::setNodeVar(const QString& nodePath,
     obj["node"] = nodePath;
     obj["var"]  = varName;
 
-    switch (value.typeId()) {
-    case QMetaType::Int:    obj["value"] = value.toInt();    break;
-    case QMetaType::Double: obj["value"] = value.toDouble(); break;
-    case QMetaType::Bool:   obj["value"] = value.toBool();   break;
-    default:                obj["value"] = value.toString(); break;
+    switch (value.type()) {
+    case QVariant::Int:    obj["value"] = value.toInt();    break;
+    case QVariant::Double: obj["value"] = value.toDouble(); break;
+    case QVariant::Bool:   obj["value"] = value.toBool();   break;
+    default:               obj["value"] = value.toString(); break;
     }
     return sendJson(obj);
 }

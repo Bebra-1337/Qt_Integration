@@ -5,8 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ─── Qt ───────────────────────────────────────────────────────────────────────
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets OpenGL OpenGLWidgets Network)
-qt_standard_project_setup()
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL Network)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
 # ─── Godot source root (для include заголовков) ───────────────────────────────
 set(GODOT_ROOT "$ENV{HOME}/godot" CACHE PATH "Path to Godot source root")
@@ -98,7 +100,7 @@ add_custom_target(godot_project_files
     COMMENT "Godot project files (edit only, built by scons)"
 )
 
-qt_add_executable(GodotQtHost ${SOURCES} ${HEADERS})
+add_executable(GodotQtHost ${SOURCES} ${HEADERS})
 
 # GodotQtHost зависит от gdextension — при сборке Qt автоматически
 # запустится scons если extension_src изменился
@@ -117,11 +119,10 @@ target_include_directories(GodotQtHost PRIVATE
 )
 
 target_link_libraries(GodotQtHost PRIVATE
-    Qt6::Core
-    Qt6::Widgets
-    Qt6::OpenGL
-    Qt6::OpenGLWidgets
-    Qt6::Network
+    Qt5::Core
+    Qt5::Widgets
+    Qt5::OpenGL
+    Qt5::Network
 )
 
 find_package(X11)

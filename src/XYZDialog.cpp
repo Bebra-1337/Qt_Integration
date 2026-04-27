@@ -52,7 +52,7 @@ XYZDialog::XYZDialog(const QString& title,
         });
 
         // Спинбокс → слайдер
-        connect(spin, &QDoubleSpinBox::valueChanged, this, [this, slider, i](double d) {
+        connect(spin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this, slider, i](double d) {
             QSignalBlocker b(slider);
             slider->setValue(toSlider(d));
             emit valueChanged(value());
