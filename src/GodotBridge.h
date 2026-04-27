@@ -37,6 +37,9 @@ public:
     // Отправить команду в Godot
     bool sendCommand(Cmd cmd, const QVariant& payload = QVariant());
 
+    // Отправить сырой JSON (уже с '\n')
+    bool sendRaw(const QByteArray& data);
+
     // Вызвать метод GDScript/C++ узла
     bool callNodeMethod(const QString& nodePath,
                         const QString& method,

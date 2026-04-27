@@ -63,6 +63,7 @@ set(SOURCES
     src/GodotWidget.cpp
     src/GodotRuntime.cpp
     src/GodotBridge.cpp
+    src/XYZDialog.cpp
 )
 
 set(HEADERS
@@ -70,6 +71,7 @@ set(HEADERS
     src/GodotWidget.h
     src/GodotRuntime.h
     src/GodotBridge.h
+    src/XYZDialog.h
 )
 
 # Регистрируем extension_src как "заголовочный" проект — только для навигации в Qt Creator

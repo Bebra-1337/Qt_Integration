@@ -1,10 +1,11 @@
+RayCast3D
+SpotLight3D
 CameraTracker
 ObjectPicker
 CharacterBody3D
 CollisionShape3D
 StaticBody3D
 MeshInstance3D
-SpotLight3D
 CSGBox3D
 CSGMesh3D
 Camera3D

@@ -17,7 +17,6 @@ public:
     void stopGodot();
     bool isGodotRunning() const;
 
-    // Доступ к bridge для подключения сигналов из MainWindow
     GodotBridge* bridge() const { return m_bridge.get(); }
 
 signals:
@@ -33,8 +32,9 @@ private slots:
     void onGodotInitialized();
 
 private:
-    void embedGodotWindow(uintptr_t winId);
-    void resizeEmbeddedWindow();
+    void      embedGodotWindow(uintptr_t winId);
+    void      hideWindowDecorations(uintptr_t winId); // NEW: скрыть до embed
+    void      resizeEmbeddedWindow();
     uintptr_t findWindowByPid(ulong pid);
 
     std::unique_ptr<GodotRuntime> m_runtime;

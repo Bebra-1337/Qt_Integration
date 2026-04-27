@@ -1,10 +1,10 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1777199264
-Main.tscn::PackedScene::2629755853198912636::1777198404::0::1::::<><><>0<>0<><>::uid://cwf8s2wst8jo6::::res://scripts/FloatingCamera.gd
+::res://::1777263527
+Main.tscn::PackedScene::2629755853198912636::1777224915::0::1::::<><><>0<>0<><>::uid://cwf8s2wst8jo6::::res://scripts/FloatingCamera.gd
 qt_bridge.gdextension::GDExtension::8970798922249660961::1777007946::0::1::::<><><>0<>0<><>::
 ::res://autoload/::1777009583
 QtBridge.tscn::PackedScene::7840963681453843086::1777009583::0::1::::<><><>0<>0<><>::
-::res://bin/::1777199242
-::res://extension_src/::1777199242
-::res://scripts/::1777198404
-FloatingCamera.gd::GDScript::6329355074205481879::1777198404::0::1::::<>Camera3D<><>0<>0<><>::
+::res://bin/::1777263371
+::res://extension_src/::1777262898
+::res://scripts/::1777199630
+FloatingCamera.gd::GDScript::6329355074205481879::1777199630::0::1::::<>Camera3D<><>0<>0<><>::

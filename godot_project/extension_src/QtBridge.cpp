@@ -164,7 +164,12 @@ void QtBridge::handle_command(const String& json_str) {
 
     } else {
         // Пробрасываем неизвестные команды через сигнал
-        emit_signal("command_received", cmd, msg);
+        // payload — вложенный объект, если есть, иначе весь msg
+        const Variant payload_var = msg.get("payload", msg);
+        Dictionary payload;
+        if (payload_var.get_type() == Variant::DICTIONARY)
+            payload = payload_var;
+        emit_signal("command_received", cmd, payload);
     }
 }
 

@@ -1,12 +1,13 @@
 #pragma once
 #include <QMainWindow>
 #include <QJsonObject>
+#include <QVector3D>
 
 class GodotWidget;
 class QLabel;
 class QLineEdit;
-class QDockWidget;
-class QFormLayout;
+class QListWidget;
+class QListWidgetItem;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -27,7 +28,6 @@ private slots:
     void onGodotConnected();
     void onGodotDisconnected();
 
-    // ── Обработчики данных из Godot ──────────────────────────────────────
     void onCameraUpdated(double x, double y, double z,
                          double rx, double ry, double rz);
     void onCustomEvent(const QString& event, const QJsonObject& data);
@@ -37,20 +37,25 @@ private:
     void setupDockPanel();
     void updateActions();
 
-    GodotWidget* m_godotWidget = nullptr;
+    void sendPickerCommand(const QString& cmd, const QJsonObject& payload);
+    void showSpawnMenu(const QJsonObject& data);
+    void showObjectMenu(const QJsonObject& data);
+    QListWidgetItem* findCubeItem(const QString& path);
 
-    // Toolbar
+    GodotWidget*  m_godotWidget = nullptr;
+
     QLineEdit* m_projectEdit = nullptr;
     QLineEdit* m_sceneEdit   = nullptr;
 
-    // Dock panel — данные из движка
-    QLabel* m_bridgeStatusLabel = nullptr;
-    QLabel* m_camPosLabel       = nullptr;
-    QLabel* m_camRotLabel       = nullptr;
-    QLabel* m_fpsLabel          = nullptr;
-    QLabel* m_customEventLabel  = nullptr;
+    QLabel*      m_bridgeStatusLabel = nullptr;
+    QLabel*      m_camPosLabel       = nullptr;
+    QLabel*      m_camRotLabel       = nullptr;
+    QLabel*      m_customEventLabel  = nullptr;
+    QListWidget* m_cubeList          = nullptr;
 
-    QMenu* m_objectMenu = nullptr;
+    QVector3D m_previewPos;
+    QVector3D m_previewRot;
+    QString   m_pendingCubeName;
 
     bool m_running = false;
 };

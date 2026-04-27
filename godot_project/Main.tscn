@@ -2,8 +2,6 @@
 
 [ext_resource type="Script" uid="uid://cwf8s2wst8jo6" path="res://scripts/FloatingCamera.gd" id="1_glv2v"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_glv2v"]
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rxg2q"]
 albedo_color = Color(1, 0, 0, 1)
 
@@ -31,17 +29,16 @@ size = Vector3(17.3432, 1, 11.181152)
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=1903914923]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.664865, 7.541628)
+keep_aspect = 0
 fov = 90.0
 script = ExtResource("1_glv2v")
 
 [node name="CharacterBody3D" type="CharacterBody3D" parent="Camera3D" unique_id=1454928911]
 motion_mode = 1
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Camera3D/CharacterBody3D" unique_id=1868938973]
-shape = SubResource("CapsuleShape3D_glv2v")
-
 [node name="ПОЛ" type="CSGBox3D" parent="." unique_id=512408807]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.023, 0, 5.379)
+use_collision = true
 size = Vector3(17.761444, 0.20007324, 11.757324)
 material = SubResource("StandardMaterial3D_rxg2q")
 
@@ -57,13 +54,6 @@ physics_material_override = SubResource("PhysicsMaterial_glv2v")
 transform = Transform3D(1, 0, 0, 0, 0.9999747, 4.0145665e-13, 0, -4.0145665e-13, 0.9999747, 0.10366821, -0.39599052, -0.060287)
 shape = SubResource("BoxShape3D_uu6xs")
 
-[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=895100832]
-transform = Transform3D(-0.08051211, 0.99675363, -6.4622077e-09, 0.48291618, 0.03900723, 0.87479734, 0.8719575, 0.07043177, -0.484489, 0, 2.7012634, 2.2802944)
-light_energy = 16.0
-light_indirect_energy = 6.282
-spot_range = 7.191
-spot_attenuation = -2.5
-
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=812617035]
 transform = Transform3D(1.765, 0, 0, 0, 1.765, 0, 0, 0, 1.765, -3.7779257, 2.8387597, 4.269458)
 material_override = SubResource("StandardMaterial3D_uu6xs")
@@ -74,3 +64,8 @@ physics_material_override = SubResource("PhysicsMaterial_uu6xs")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MeshInstance3D/StaticBody3D" unique_id=1632998048]
 shape = SubResource("BoxShape3D_r0du0")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="." unique_id=108578089]
+transform = Transform3D(1, 0, 0, 0, -0.21720628, 0.9761257, 0, -0.9761257, -0.21720628, 0, 5.7974105, 2.258716)
+light_energy = 16.0
+spot_range = 9.014842

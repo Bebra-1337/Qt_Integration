@@ -34,9 +34,8 @@ GodotWidget::GodotWidget(QWidget* parent)
 GodotWidget::~GodotWidget() { stopGodot(); }
 
 bool GodotWidget::startGodot(const QString& projectPath,
-                              const QString& mainScene)
+                             const QString& mainScene)
 {
-    // Стартуем TCP сервер ДО запуска Godot — он сразу попытается подключиться
     m_bridge->startServer(47890);
 
     winId(); // форсируем создание нативного окна
@@ -53,7 +52,7 @@ bool GodotWidget::startGodot(const QString& projectPath,
 void GodotWidget::stopGodot() {
     if (m_runtime && m_runtime->isRunning())
         m_runtime->shutdown();
-    m_embedded    = false;
+    m_embedded      = false;
     m_embeddedWinId = 0;
 }
 
@@ -75,14 +74,15 @@ void GodotWidget::resizeEvent(QResizeEvent* event) {
 // ─── onGodotInitialized ───────────────────────────────────────────────────────
 
 void GodotWidget::onGodotInitialized() {
-    qDebug() << "[GodotWidget] Searching for Godot X11 window...";
+    qDebug() << "[GodotWidget] Searching for Godot X11 window (PID:"
+             << m_runtime->godotPid() << ")";
     m_findWindowAttempts = 0;
 
     auto* timer = new QTimer(this);
-    timer->setInterval(300);
+    timer->setInterval(200); // опрашиваем чаще — меньше времени до embed
 
     connect(timer, &QTimer::timeout, this, [this, timer]() {
-        m_findWindowAttempts++;
+        ++m_findWindowAttempts;
 
         const uintptr_t winId = findWindowByPid(
             static_cast<ulong>(m_runtime->godotPid()));
@@ -90,20 +90,24 @@ void GodotWidget::onGodotInitialized() {
         if (winId != 0) {
             timer->stop();
             timer->deleteLater();
-            qDebug() << "[GodotWidget] Found window" << winId
-                     << "— confirming stability in 800ms...";
+            qDebug() << "[GodotWidget] Found Godot window" << winId;
 
-            QTimer::singleShot(800, this, [this, winId]() {
+            // Сразу скрываем окно у WM ДО того как оно успевает
+            // нормально отрисоваться — убирает "мигание"
+            hideWindowDecorations(winId);
+
+            // Короткая пауза: Godot должен закончить маппинг окна
+            // прежде чем мы делаем XReparentWindow
+            QTimer::singleShot(300, this, [this, winId]() {
 #ifdef Q_OS_LINUX
-                // Проверяем что окно всё ещё живо
                 Display* dpy = XOpenDisplay(nullptr);
                 if (dpy) {
-                    XWindowAttributes a;
+                    XWindowAttributes a{};
                     const bool alive = XGetWindowAttributes(
                         dpy, static_cast<Window>(winId), &a);
                     XCloseDisplay(dpy);
-                    if (!alive) {
-                        qDebug() << "[GodotWidget] Window gone, restarting search";
+                    if (!alive || a.map_state == IsUnmapped) {
+                        qDebug() << "[GodotWidget] Window gone, retrying";
                         onGodotInitialized();
                         return;
                     }
@@ -113,21 +117,59 @@ void GodotWidget::onGodotInitialized() {
                 emit godotReady();
             });
 
-        } else if (m_findWindowAttempts >= 60) {
+        } else if (m_findWindowAttempts >= 75) { // 15 секунд при 200ms
             timer->stop();
             timer->deleteLater();
-            emit godotError("Cannot find Godot window after 18 seconds");
+            emit godotError("Cannot find Godot window after 15 seconds");
         }
     });
 
     timer->start();
 }
 
+// ─── hideWindowDecorations ───────────────────────────────────────────────────
+// Вызываем ДО embed — просим WM убрать заголовок и рамку сразу,
+// чтобы окно не успело мелькнуть со своей рамкой
+
+void GodotWidget::hideWindowDecorations(uintptr_t winId) {
+#ifdef Q_OS_LINUX
+    Display* dpy = XOpenDisplay(nullptr);
+    if (!dpy) return;
+
+    const Window w = static_cast<Window>(winId);
+
+    // _MOTIF_WM_HINTS — стандартный способ убрать декорации
+    Atom motif = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
+    if (motif != None) {
+        struct MotifHints {
+            unsigned long flags, functions, decorations, input_mode, status;
+        };
+        MotifHints hints = {2, 0, 0, 0, 0}; // flags=2 → только decorations
+        XChangeProperty(dpy, w, motif, motif, 32, PropModeReplace,
+                        reinterpret_cast<unsigned char*>(&hints), 5);
+    }
+
+    // Дополнительно: убираем из taskbar
+    Atom wmState     = XInternAtom(dpy, "_NET_WM_STATE", False);
+    Atom skipTaskbar = XInternAtom(dpy, "_NET_WM_STATE_SKIP_TASKBAR", False);
+    Atom skipPager   = XInternAtom(dpy, "_NET_WM_STATE_SKIP_PAGER", False);
+    if (wmState != None && skipTaskbar != None) {
+        Atom atoms[2] = {skipTaskbar, skipPager};
+        XChangeProperty(dpy, w, wmState, XA_ATOM, 32, PropModeReplace,
+                        reinterpret_cast<unsigned char*>(atoms), 2);
+    }
+
+    XFlush(dpy);
+    XCloseDisplay(dpy);
+#else
+    Q_UNUSED(winId)
+#endif
+}
+
 // ─── findWindowByPid ─────────────────────────────────────────────────────────
 
 #ifdef Q_OS_LINUX
 static uintptr_t searchTree(Display* dpy, Window w, ulong pid) {
-    // Проверяем _NET_WM_PID
     Atom netPid = XInternAtom(dpy, "_NET_WM_PID", False);
     if (netPid != None) {
         Atom type; int fmt; ulong n, after;
@@ -138,12 +180,11 @@ static uintptr_t searchTree(Display* dpy, Window w, ulong pid) {
             const ulong wpid = *reinterpret_cast<ulong*>(prop);
             XFree(prop);
             if (wpid == pid) {
-                XWindowAttributes a;
+                XWindowAttributes a{};
                 if (XGetWindowAttributes(dpy, w, &a) &&
                     a.width > 200 && a.height > 200 &&
                     a.map_state == IsViewable) {
-                    // Только окна с WM_CLASS (не splash)
-                    XClassHint ch;
+                    XClassHint ch{};
                     if (XGetClassHint(dpy, w, &ch)) {
                         XFree(ch.res_name);
                         XFree(ch.res_class);
@@ -153,7 +194,6 @@ static uintptr_t searchTree(Display* dpy, Window w, ulong pid) {
             }
         }
     }
-    // Рекурсия по детям
     Window parent; Window* children = nullptr; unsigned n = 0;
     if (XQueryTree(dpy, w, &parent, &parent, &children, &n) && children) {
         for (unsigned i = 0; i < n; ++i) {
@@ -190,21 +230,21 @@ void GodotWidget::embedGodotWindow(uintptr_t winId) {
     const Window parent = static_cast<Window>(this->winId());
     const Window child  = static_cast<Window>(winId);
 
-    // Убираем декорации
-    Atom motif = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
-    if (motif != None) {
-        struct { ulong flags, funcs, deco, mode, status; }
-            hints = {2,0,0,0,0};
-        XChangeProperty(dpy, child, motif, motif, 32,
-                        PropModeReplace,
-                        reinterpret_cast<unsigned char*>(&hints), 5);
-    }
-
+    // Перемещаем в Qt-контейнер
     XReparentWindow(dpy, child, parent, 0, 0);
+
+    // Сразу выставляем нужный размер
+    XMoveResizeWindow(dpy, child, 0, 0,
+                      static_cast<unsigned>(width()),
+                      static_cast<unsigned>(height()));
+
     XMapWindow(dpy, child);
+    XRaiseWindow(dpy, child);
     XFlush(dpy);
     XCloseDisplay(dpy);
-    qDebug() << "[GodotWidget] Reparented" << winId << "->" << this->winId();
+
+    qDebug() << "[GodotWidget] Embedded window" << winId
+             << "into Qt widget" << this->winId();
 #endif
 
     m_embedded = true;
@@ -219,7 +259,9 @@ void GodotWidget::resizeEmbeddedWindow() {
     Display* dpy = XOpenDisplay(nullptr);
     if (dpy) {
         XMoveResizeWindow(dpy, static_cast<Window>(m_embeddedWinId),
-                          0, 0, width(), height());
+                          0, 0,
+                          static_cast<unsigned>(width()),
+                          static_cast<unsigned>(height()));
         XFlush(dpy);
         XCloseDisplay(dpy);
     }

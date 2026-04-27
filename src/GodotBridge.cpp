@@ -192,3 +192,9 @@ bool GodotBridge::sendJson(const QJsonObject& obj) {
     const QByteArray data = QJsonDocument(obj).toJson(QJsonDocument::Compact) + '\n';
     return m_socket->write(data) == data.size();
 }
+
+bool GodotBridge::sendRaw(const QByteArray& data) {
+    if (!m_socket || m_socket->state() != QAbstractSocket::ConnectedState)
+        return false;
+    return m_socket->write(data) == data.size();
+}
